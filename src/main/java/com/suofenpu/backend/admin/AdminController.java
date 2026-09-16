@@ -35,6 +35,13 @@ import com.suofenpu.backend.dish.DishRepository;
 import com.suofenpu.backend.media.GalleryStorageService;
 import com.suofenpu.backend.order.OrderService;
 import com.suofenpu.backend.order.OrderStatus;
+import com.suofenpu.backend.store.HomeBannerDtos.HomeBannerItem;
+import com.suofenpu.backend.store.HomeBannerDtos.ReplaceHomeBannersRequest;
+import com.suofenpu.backend.store.HomeBannerService;
+import com.suofenpu.backend.store.StoreSettingsDtos.StoreSettingsResponse;
+import com.suofenpu.backend.store.StoreSettingsDtos.UpdateStoreOpenRequest;
+import com.suofenpu.backend.store.StoreSettingsDtos.UpdateStoreSettingsRequest;
+import com.suofenpu.backend.store.StoreSettingsService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -50,17 +57,23 @@ public class AdminController {
     private final DishCategoryRepository dishCategoryRepository;
     private final GalleryStorageService galleryStorageService;
     private final OrderService orderService;
+    private final StoreSettingsService storeSettingsService;
+    private final HomeBannerService homeBannerService;
 
     public AdminController(
         DishRepository dishRepository,
         DishCategoryRepository dishCategoryRepository,
         GalleryStorageService galleryStorageService,
-        OrderService orderService
+        OrderService orderService,
+        StoreSettingsService storeSettingsService,
+        HomeBannerService homeBannerService
     ) {
         this.dishRepository = dishRepository;
         this.dishCategoryRepository = dishCategoryRepository;
         this.galleryStorageService = galleryStorageService;
         this.orderService = orderService;
+        this.storeSettingsService = storeSettingsService;
+        this.homeBannerService = homeBannerService;
     }
 
     @GetMapping("/orders")
@@ -247,6 +260,36 @@ public class AdminController {
         Dish dish = dishRepository.findById(id)
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "菜品不存在：" + id));
         dishRepository.delete(dish);
+    }
+
+    @GetMapping("/store-settings")
+    @Operation(summary = "获取门店设置")
+    public StoreSettingsResponse storeSettings() {
+        return storeSettingsService.adminSettings();
+    }
+
+    @PatchMapping("/store-settings/store-open")
+    @Operation(summary = "更新营业状态")
+    public StoreSettingsResponse updateStoreOpen(@Valid @RequestBody UpdateStoreOpenRequest request) {
+        return storeSettingsService.updateStoreOpen(request);
+    }
+
+    @PatchMapping("/store-settings")
+    @Operation(summary = "更新门店资料")
+    public StoreSettingsResponse updateStoreSettings(@Valid @RequestBody UpdateStoreSettingsRequest request) {
+        return storeSettingsService.updateSettings(request);
+    }
+
+    @GetMapping("/home-banners")
+    @Operation(summary = "获取首页轮播图")
+    public List<HomeBannerItem> homeBanners() {
+        return homeBannerService.adminList();
+    }
+
+    @PostMapping("/home-banners")
+    @Operation(summary = "保存首页轮播图")
+    public List<HomeBannerItem> replaceHomeBanners(@Valid @RequestBody ReplaceHomeBannersRequest request) {
+        return homeBannerService.replaceAll(request);
     }
 
     private DishCategory findEnabledCategory(Long categoryId) {

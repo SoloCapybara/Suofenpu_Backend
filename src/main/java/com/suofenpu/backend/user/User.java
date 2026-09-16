@@ -116,4 +116,8 @@ public class User {
             this.unionid = unionid;
         }
     }
+
+    public void updateStatus(UserStatus status) {
+        this.status = status;
+    }
 }
